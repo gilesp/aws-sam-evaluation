@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Transcribe audio file from an s3 bucket using the TranscribeService
+
+  '
+Globals:
+  Function:
+    Timeout: 3
+Resources:
+  ListRecordingsFunction:
+    Properties:
+      CodeUri: s3://vurt-uk/95c7d291fa3a3f8078aa08e8a29a0679
+      Environment:
+        Variables:
+          RecordingsBucket:
+            Ref: SourceRecordingsBucket
+      Events:
+        ListRecordings:
+          Properties:
+            Method: get
+            Path: /listRecordings
+          Type: Api
+      Handler: app.listRecordings
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  SourceRecordingsBucket:
+    Type: AWS::S3::Bucket
+  TranscribeFunction:
+    Properties:
+      CodeUri: s3://vurt-uk/d1ef5358bd6398e61764b68ae0a7ebf6
+      Events:
+        NewAudioFile:
+          Properties:
+            Bucket:
+              Ref: SourceRecordingsBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                - Name: prefix
+                  Value: recordings/
+                - Name: suffix
+                  Value: mp3
+          Type: S3
+      Handler: app.lambdaHandler
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31

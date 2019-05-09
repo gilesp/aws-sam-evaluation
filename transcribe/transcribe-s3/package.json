@@ -1,0 +1,15 @@
+{
+  "name": "transcribe-s3",
+  "version": "1.0.0",
+  "description": "Send audio file from s3 to aws transcribe service",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.446.0",
+    "uuid": "^3.3.2"
+  }
+}

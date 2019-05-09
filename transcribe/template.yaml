@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Transcribe audio file from an s3 bucket using the TranscribeService
+  
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+
+    # See for example https://github.com/aws-samples/amazon-transcribe-comprehend-podcast/blob/master/template.yaml
+Resources:
+  ListRecordingsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: recordings/
+      Handler: app.listRecordings
+      Runtime: nodejs8.10
+      Environment:
+        Variables:
+          RecordingsBucket:
+            Ref: SourceRecordingsBucket
+      Events:
+        ListRecordings:
+          Type: Api
+          Properties:
+            Path: /listRecordings
+            Method: get
+      
+  TranscribeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: transcribe-s3/
+      Handler: app.lambdaHandler
+      Runtime: nodejs8.10
+      Events:
+        NewAudioFile:
+          Type: S3
+          Properties:
+            Bucket:
+              Ref: SourceRecordingsBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: "recordings/"
+                  - Name: suffix
+                    Value: "mp3"
+
+  SourceRecordingsBucket:
+    Type: 'AWS::S3::Bucket'
+  
