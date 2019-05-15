@@ -13,7 +13,7 @@ async function lambdaHandler(event, context, callback) {
       //MediaFileUri: "https://s3.amazonaws.com/" +  s3ObjectBucket + "/" + s3ObjectKey
     },
     MediaFormat: "mp3",
-    TranscriptionJobName: "Transcribing-" + s3ObjectKey.replace("/", "_"),
+    TranscriptionJobName: s3ObjectKey.substring(s3ObjectKey.indexOf("/") + 1),
     OutputBucketName: s3ObjectBucket,
     Settings: {
       ShowSpeakerLabels: true,
