@@ -5,7 +5,7 @@
  let recordings = [];
 
  onMount(async () => {
-   const response = await fetch(`http://localhost:3000/listRecordings`);
+   const response = await fetch(`http://localhost:3000/recordings`);
    recordings = await response.json();
  });
 </script>
@@ -14,10 +14,6 @@
 	h1 {
 		color: purple;
 	}
-
- Recording {
-   margin-bottom: 5px;
- }
 </style>
 
 <h1>Recordings</h1>
