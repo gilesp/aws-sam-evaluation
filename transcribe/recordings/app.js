@@ -28,11 +28,37 @@ function listRecordings(event, context, callback) {
 
         response = createResponse(200, recordings);
       }
-      console.log("RESPONSE: " + JSON.stringify(response));
       callback(null, response);
     });
   } catch (err) {
-    console.log("ERROR");
+    callback(createErrorResponse(err));
+  }
+}
+
+function getTranscription(event, context, callback) {
+  let response;
+
+  try {
+    let params = {
+      Bucket: process.env.RecordingsBucket,
+      Key: event.pathParameters.recordingId + ".json"
+    };
+
+    s3.getObject(params, function (err, data) {
+      if (err) {
+        response = createErrorResponse(err);
+      } else {
+        let transcription = JSON.parse(data.Body.toString("ascii"));
+        //console.log("DATA: " + transcription.results.transcripts[0].transcript);
+        response = createResponse(200, {
+          "transcription": transcription.results.transcripts[0].transcript,
+          "statusCode": 200
+        });
+      }
+
+      callback(null, response);
+    });
+  } catch (err){
     callback(createErrorResponse(err));
   }
 }
@@ -53,3 +79,4 @@ function createResponse(code, body) {
 }
 
 exports.listRecordings = listRecordings;
+exports.getTranscription = getTranscription;

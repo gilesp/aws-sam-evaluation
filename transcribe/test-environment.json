@@ -1,5 +1,8 @@
 {
   "ListRecordingsFunction": {
     "RecordingsBucket": "aws-sam-transcribe-sourcerecordingsbucket-12ox7c7fd8hqs"
+  },
+  "GetTranscriptionFunction": {
+    "RecordingsBucket": "aws-sam-transcribe-sourcerecordingsbucket-12ox7c7fd8hqs"
   }
 }
