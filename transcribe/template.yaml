@@ -24,9 +24,26 @@ Resources:
         ListRecordings:
           Type: Api
           Properties:
-            Path: /listRecordings
+            Path: /recordings
             Method: get
-      
+            
+  GetTranscriptionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: recordings/
+      Handler: app.getTranscription
+      Runtime: nodejs8.10
+      Environment:
+        Variables:
+          RecordingsBucket:
+            Ref: SourceRecordingsBucket
+      Events:
+        GetTranscription:
+          Type: Api
+          Properties:
+            Path: /recordings/{recordingId}/transcription
+            Method: get
+            
   TranscribeFunction:
     Type: AWS::Serverless::Function
     Properties:
