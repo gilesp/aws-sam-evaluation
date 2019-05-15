@@ -1,9 +1,21 @@
 <script>
+ import { onMount } from "svelte";
+ import Popup from "./Popup.svelte";
+ 
  export let name;
  export let date;
  export let url;
 
  const recordingDate = new Date(date);
+
+ const strippedName = name.substring(11);
+ let transcription = {};
+ 
+ onMount(async () => {
+   const response = await fetch(`http://localhost:3000/recordings/` + strippedName + `/transcription`);
+   transcription = await response.json();
+ });
+ 
 </script>
 
 <style>
@@ -13,6 +25,7 @@
    border-radius: 2px;
    box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
    padding: 1em;
+   margin-bottom: 1em;
  }
 
  h2 {
@@ -21,17 +34,38 @@
    border-bottom: 1px solid #ff3e00
  }
 
- audio, .date {
+ audio, .date, .transcription {
    margin: 0 0 0.5em 0;
    line-height: 1.2;
+   width: 100%;
  }
+
+ .date, .transcription {
+   padding: 0 0 0 1.5em;
+   background:  0 0 no-repeat;
+   background-size: 20px 20px;
+ }
+
+ .date {
+   background-image: url(images/calendar.svg);
+ }
+
+ .transcription {
+   background-image: url(images/file-text.svg);
+ }
+ 
 </style>
 
 <article class="recording" >
-  <h2>{name.substring(11)}</h2>
+  <h2>{strippedName}</h2>
   <audio controls src={url}>
     Your browser does not support the <code>audio</code> element.
   </audio>
+  <div class="transcription" >
+    {#if transcription.statusCode === 200}
+    <Popup title="Transcription" message={transcription.transcription} label="Transcription" />
+    {/if}
+  </div>
   <div class="date">
     {recordingDate.toLocaleString()}
   </div>
