@@ -44,8 +44,11 @@ function createErrorResponse(err) {
 
 function createResponse(code, body) {
   return {
-    'statusCode': code,
-    'body': JSON.stringify(body)
+    statusCode: code,
+    headers: {
+        "Access-Control-Allow-Origin" : "*"
+    },
+    body: JSON.stringify(body)
   };
 }
 

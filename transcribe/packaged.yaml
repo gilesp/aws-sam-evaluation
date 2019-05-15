@@ -8,7 +8,11 @@ Globals:
 Resources:
   ListRecordingsFunction:
     Properties:
-      CodeUri: s3://vurt-uk/95c7d291fa3a3f8078aa08e8a29a0679
+      CodeUri: s3://vurt-uk/9a5dc6f21a2628afea610949d3549ee4
+      Cors:
+        AllowHeaders: '''Content-Type'''
+        AllowMethods: '''GET'''
+        AllowOrigin: '''*'''
       Environment:
         Variables:
           RecordingsBucket:
