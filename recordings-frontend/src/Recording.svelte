@@ -1,6 +1,7 @@
 <script>
  import { onMount } from "svelte";
  import Popup from "./Popup.svelte";
+ import { API_URL } from "./constants.js";
  
  export let name;
  export let date;
@@ -12,7 +13,7 @@
  let transcription = {};
  
  onMount(async () => {
-   const response = await fetch(`http://localhost:3000/recordings/` + strippedName + `/transcription`);
+   const response = await fetch(API_URL + `recordings/` + strippedName + `/transcription`);
    transcription = await response.json();
  });
  

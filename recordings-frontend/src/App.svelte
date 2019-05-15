@@ -1,19 +1,20 @@
 <script>
  import { onMount } from "svelte";
  import Recording from "./Recording.svelte";
+ import { API_URL } from "./constants.js";
  
  let recordings = [];
 
  onMount(async () => {
-   const response = await fetch(`http://localhost:3000/recordings`);
+   const response = await fetch(API_URL + 'recordings');
    recordings = await response.json();
  });
 </script>
 
 <style>
-	h1 {
-		color: purple;
-	}
+ h1 {
+   color: purple;
+ }
 </style>
 
 <h1>Recordings</h1>
