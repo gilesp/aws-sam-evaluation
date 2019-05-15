@@ -8,6 +8,11 @@ Globals:
   Function:
     Timeout: 3
 
+Parameters:
+  BucketNamePrefix:
+    Type: String
+    Default: vurt-uk
+    
     # See for example https://github.com/aws-samples/amazon-transcribe-comprehend-podcast/blob/master/template.yaml
 Resources:
   ListRecordingsFunction:
@@ -20,13 +25,16 @@ Resources:
         Variables:
           RecordingsBucket:
             Ref: SourceRecordingsBucket
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Sub "${BucketNamePrefix}-source-recordings"
       Events:
         ListRecordings:
           Type: Api
           Properties:
             Path: /recordings
             Method: get
-            
+        
   GetTranscriptionFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -37,19 +45,31 @@ Resources:
         Variables:
           RecordingsBucket:
             Ref: SourceRecordingsBucket
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Sub "${BucketNamePrefix}-source-recordings"
       Events:
         GetTranscription:
           Type: Api
           Properties:
             Path: /recordings/{recordingId}/transcription
             Method: get
-            
+
   TranscribeFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: transcribe-s3/
       Handler: app.lambdaHandler
       Runtime: nodejs8.10
+      # SAM adds a default IAM Role for your lambda allowing it to
+      # execute But you need to specify any additional roles it
+      # requires yourself Or specify an already existing Role.
+      # Policies can be an existing IAM managed policy, or a SAM one
+      # that allows for slightly more control via parameters
+      Policies:
+        - AmazonTranscribeFullAccess
+        - S3CrudPolicy:
+            BucketName: !Sub "${BucketNamePrefix}-source-recordings"
       Events:
         NewAudioFile:
           Type: S3
@@ -67,4 +87,5 @@ Resources:
 
   SourceRecordingsBucket:
     Type: 'AWS::S3::Bucket'
-  
+    Properties:
+      BucketName: !Sub "${BucketNamePrefix}-source-recordings"

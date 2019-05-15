@@ -5,14 +5,36 @@ Description: 'Transcribe audio file from an s3 bucket using the TranscribeServic
 Globals:
   Function:
     Timeout: 3
+Parameters:
+  BucketNamePrefix:
+    Default: vurt-uk
+    Type: String
 Resources:
+  GetTranscriptionFunction:
+    Properties:
+      CodeUri: s3://vurt-uk/2579e4774af5b0421f4e486b08859579
+      Environment:
+        Variables:
+          RecordingsBucket:
+            Ref: SourceRecordingsBucket
+      Events:
+        GetTranscription:
+          Properties:
+            Auth:
+              Authorizer: NONE
+            Method: get
+            Path: /recordings/{recordingId}/transcription
+          Type: Api
+      Handler: app.getTranscription
+      Policies:
+      - S3ReadPolicy:
+          BucketName:
+            Fn::Sub: ${BucketNamePrefix}-source-recordings
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
   ListRecordingsFunction:
     Properties:
-      CodeUri: s3://vurt-uk/9a5dc6f21a2628afea610949d3549ee4
-      Cors:
-        AllowHeaders: '''Content-Type'''
-        AllowMethods: '''GET'''
-        AllowOrigin: '''*'''
+      CodeUri: s3://vurt-uk/2579e4774af5b0421f4e486b08859579
       Environment:
         Variables:
           RecordingsBucket:
@@ -20,17 +42,26 @@ Resources:
       Events:
         ListRecordings:
           Properties:
+            Auth:
+              Authorizer: NONE
             Method: get
-            Path: /listRecordings
+            Path: /recordings
           Type: Api
       Handler: app.listRecordings
+      Policies:
+      - S3ReadPolicy:
+          BucketName:
+            Fn::Sub: ${BucketNamePrefix}-source-recordings
       Runtime: nodejs8.10
     Type: AWS::Serverless::Function
   SourceRecordingsBucket:
+    Properties:
+      BucketName:
+        Fn::Sub: ${BucketNamePrefix}-source-recordings
     Type: AWS::S3::Bucket
   TranscribeFunction:
     Properties:
-      CodeUri: s3://vurt-uk/d1ef5358bd6398e61764b68ae0a7ebf6
+      CodeUri: s3://vurt-uk/0a71326a84c86f2bd9e8e4c347361e5f
       Events:
         NewAudioFile:
           Properties:
@@ -46,6 +77,11 @@ Resources:
                   Value: mp3
           Type: S3
       Handler: app.lambdaHandler
+      Policies:
+      - AmazonTranscribeFullAccess
+      - S3CrudPolicy:
+          BucketName:
+            Fn::Sub: ${BucketNamePrefix}-source-recordings
       Runtime: nodejs8.10
     Type: AWS::Serverless::Function
 Transform: AWS::Serverless-2016-10-31
