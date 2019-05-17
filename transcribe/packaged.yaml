@@ -12,7 +12,7 @@ Parameters:
 Resources:
   GetTranscriptionFunction:
     Properties:
-      CodeUri: s3://vurt-uk/2579e4774af5b0421f4e486b08859579
+      CodeUri: s3://vurt-uk/651fe391829b4826e9a09985d76405ed
       Environment:
         Variables:
           RecordingsBucket:
@@ -20,8 +20,6 @@ Resources:
       Events:
         GetTranscription:
           Properties:
-            Auth:
-              Authorizer: NONE
             Method: get
             Path: /recordings/{recordingId}/transcription
           Type: Api
@@ -34,7 +32,7 @@ Resources:
     Type: AWS::Serverless::Function
   ListRecordingsFunction:
     Properties:
-      CodeUri: s3://vurt-uk/2579e4774af5b0421f4e486b08859579
+      CodeUri: s3://vurt-uk/651fe391829b4826e9a09985d76405ed
       Environment:
         Variables:
           RecordingsBucket:
@@ -42,8 +40,6 @@ Resources:
       Events:
         ListRecordings:
           Properties:
-            Auth:
-              Authorizer: NONE
             Method: get
             Path: /recordings
           Type: Api
@@ -52,6 +48,18 @@ Resources:
       - S3ReadPolicy:
           BucketName:
             Fn::Sub: ${BucketNamePrefix}-source-recordings
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  PreFlightFunction:
+    Properties:
+      CodeUri: s3://vurt-uk/651fe391829b4826e9a09985d76405ed
+      Events:
+        GetEvent:
+          Properties:
+            Method: options
+            Path: /recordings
+          Type: Api
+      Handler: app.getPreflightHandler
       Runtime: nodejs8.10
     Type: AWS::Serverless::Function
   SourceRecordingsBucket:
