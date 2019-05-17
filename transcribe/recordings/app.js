@@ -80,3 +80,16 @@ function createResponse(code, body) {
 
 exports.listRecordings = listRecordings;
 exports.getTranscription = getTranscription;
+exports.getPreflightHandler = async (event, context, callback) => {
+    callback(null, {
+      body: {} ,
+      headers: {
+        'content-type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+        'Access-Control-Allow-Methods': 'OPTIONS,GET,POST,PUT,PATCH,DELETE',
+        'Access-Control-Allow-Credentials': true
+      },
+      statusCode: 200
+    });
+};
