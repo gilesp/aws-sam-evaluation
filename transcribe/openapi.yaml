@@ -1,0 +1,72 @@
+openapi: 3.0.2
+info:
+  title: Recording Transcriptions
+  description: API for accessing audio recordings and their transcriptions
+  version: 0.0.1
+servers:
+  - url: 'http://localhost:3000'
+    description: Local development server
+paths:
+  /recordings:
+    options:
+      summary: Preflight checks 
+      responses:
+        '200': 
+          description: OK
+      x-amazon-apigateway-integration:
+        httpMethod: post
+        type: aws_proxy
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PreFlightFunction.Arn}/invocations
+    get:
+      summary: Returns a list of recordings
+      responses:
+        '200':
+          description: A JSON array of recording ids
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recording'
+      x-amazon-apigateway-integration:
+        httpMethod: post
+        type: aws_proxy
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ListRecordingsFunction.Arn}/invocations
+  '/recordings/{recordingId}/transcription':
+    get:
+      summary: Returns a recording transcription
+      parameters:
+        - name: recordingId
+          in: path
+          required: true
+          description: The id of the recording requested
+          schema:
+            type: string
+            minimum: 1
+      responses:
+        '200':
+          description: A recording object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recording'
+      x-amazon-apigateway-integration:
+        httpMethod: post
+        type: aws_proxy
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetTranscriptionFunction.Arn}/invocations
+components:
+  schemas:
+    Recording:
+      properties:
+        name:
+          type: string
+          example: 1904051218.mp4
+        modified:
+          type: string
+          format: date-time
+        url:
+          type: string
+          format: uri

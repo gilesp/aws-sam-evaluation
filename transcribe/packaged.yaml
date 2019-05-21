@@ -10,6 +10,15 @@ Parameters:
     Default: vurt-uk
     Type: String
 Resources:
+  ApiGatewayApi:
+    Properties:
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: s3://vurt-uk/cd0b0e0a94c2237926d6689576e832e8
+      StageName: Prod
+    Type: AWS::Serverless::Api
   GetTranscriptionFunction:
     Properties:
       CodeUri: s3://vurt-uk/651fe391829b4826e9a09985d76405ed
@@ -22,6 +31,8 @@ Resources:
           Properties:
             Method: get
             Path: /recordings/{recordingId}/transcription
+            RestApiId:
+              Ref: ApiGatewayApi
           Type: Api
       Handler: app.getTranscription
       Policies:
@@ -42,6 +53,8 @@ Resources:
           Properties:
             Method: get
             Path: /recordings
+            RestApiId:
+              Ref: ApiGatewayApi
           Type: Api
       Handler: app.listRecordings
       Policies:
@@ -58,6 +71,8 @@ Resources:
           Properties:
             Method: options
             Path: /recordings
+            RestApiId:
+              Ref: ApiGatewayApi
           Type: Api
       Handler: app.getPreflightHandler
       Runtime: nodejs8.10
