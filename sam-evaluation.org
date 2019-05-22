@@ -1,0 +1,175 @@
+* What is AWS SAM
+- Serverless Application Model is "an open source framework for building serverless applications"
+- cli tool
+- superset of cloudformation
+
+It's basically a nice wrapper around cloudformation to define and
+deploy your serverless apps. While you can provision everythign
+cloudformation does, its sweet spot is API Gateway, Lambda and
+DynamoDB.
+
+Cloudformation template with an extra line:
+~Transform: 'AWS::Serverless-2016-10-31'~
+
+* What is it for?
+
+Quickly defining and running lambdas, with events to trigger them.
+
+Local execution (thanks to docker), and testing.
+
+Packaging & deploying your applications via the sam cli.
+
+You define functions, events that trigger them and optionally an
+apigateway, although this is created implicitly for you by defining
+Api events to trigger your functions.
+
+IAM roles are automatically created for you if you don't define them
+yourself. It also has template policies you can use (i.e
+S3ReadPolicy), which take parameters to more easily limit the roles to
+specific resources.
+
+You can also define S3 buckets and DynamoDB tables to use as part of
+your application (You can define anything cloudformation allows, but
+you'd probably have to define more stuff yourself).
+
+There's functionality for defining layers and applications, which
+allow you to organise and reuse functionality between projects.
+
+* What did I build with it?
+
+I built a simple backend for an application that would take an audio
+file in an s3 bucket, then run it through the AWS Transcription
+service. There were also lambdas for getting a list of recordings and
+the transcription (if available).
+
+I also created a simple frontend using Svelte to allow browsing the
+files, playing them back and viewing the transcriptions.
+
+* How do you use it?
+
+** Create a new project
+~sam init~ and away you go! 
+
+Defaults to python, but also supports java,
+node, dot net (old & core), go and ruby, just as you'd expect.
+
+Can also give it a custom template to base the new project one, either
+local or in a repo somewhere. Useful if you have a common structure
+you want to reuse on multiple projects. There are plenty of sample
+ones on the AWS github account.
+
+By default you get a hello world function.
+
+** Define your functions
+Time to get yammeling!
+
+Basically you define a function, and then either implicitly or
+explicitly defin the api gateway that goes with it. Functions are
+triggered by events, and you define those too, along with any
+ancilliary things your app will need, such as S3 buckets or DynamoDB
+table (or anything CloudFormation can provision).
+
+#+BEGIN_SRC yaml
+GetTranscriptionFunction:
+  Type: AWS::Serverless::Function
+  Properties:
+    CodeUri: recordings/
+    Handler: app.getTranscription
+    Runtime: nodejs8.10
+    Environment:
+      Variables:
+        RecordingsBucket:
+          Ref: SourceRecordingsBucket
+    Policies:
+      - S3ReadPolicy:
+          BucketName: !Sub "${BucketNamePrefix}-source-recordings"
+    Events:
+      GetTranscription:
+        Type: Api
+        Properties:
+          Path: /recordings/{recordingId}/transcription
+          Method: get
+#+END_SRC
+
+Here's one of my function definitions, it sets up a resource called
+GetTranscriptionFunction that's of type AWS::Serverless::Function. The
+properties define where the code lives, any environment variables it
+needs, policies to apply and any events that could trigger it
+
+The policies are convenience wrappers around IAM - here I'm using the
+provided S3ReadPolicy to allow my function to read from the specified
+S3 bucket (define elsewhere in my template).
+
+Functions can be triggered by multiple events. In this case, I'm
+defining a type of Api, and then the path and the method. The path can
+have parameters in it, which get passed through to your function.
+Behind the scenes, an API Gateway will be provisioned for these
+functions, without me having to do anything. If you want more control
+though, you can manually define the Api Gateway resource in your
+template.
+
+** Run Locally & Develop
+~sam local start-api~ can then go to http://localhost:3000/function-name
+and test your function. This command starts up a docker instance to
+run your lambda. 
+
+It supports dynamic reloading, so changes you make in your code are
+reflected immediately (presumably after compilation/build for java etc.).
+
+You only need to restart when you make changes to your template.yaml file.
+
+In terms of testing, the sam cli can also generate dummy events for
+you, such as an object being added to an s3 bucket. You can then use
+these events to trigger your functions locally.
+
+There's also ~sam local start-lambda~ to run your functions locally for
+testing. This allows you to invoke and test against lambdas directly,
+without the api gateway. This could be useful for automated tests, as
+the same test can then be invoked against a deployed lambda.
+
+** Package & Deploy 
+Once you've run and developed things locally, you'll need to push it up to AWS land.
+
+The deployment package is standard lambda stuff, but the sam cli
+provides a convenience function to do it for you:
+~sam package --output-template-file packaged.yaml --s3-bucket S3-BUCKET-NAME~
+
+The zip is uploaded to your bucket, and the packaged.yaml file is a
+version of your template.yaml file but updated to refer to the s3
+bucket rather than local code. Although you do still need an actual s3
+bucket with the object in for your code to access, in this scenario,
+so that might get messy with multiple developers/environments.
+
+Then you can deploy your code with 
+~sam deploy --template-file packaged.yaml --stack-name A-NICE-STACK-NAME --capabilities CAPABILITY_IAM --region eu-west-1~ 
+and cloudformation will do its thing.
+
+I don't think I need to say much more about the development - it's a
+nice quick feedback loop. I believe it's supported by the AWS plugins
+for IntelliJ and Visual Studio Code but I haven't tried those.
+
+* Is it any good?
+ - What's to like?
+   - Dead simple to get started - command line is nice, project
+     skeletons/templates
+   - Local execution - great feedback loop for development
+   - Automated testing for your lambda functions
+     - TODO Look into testing more.
+ - What's not good?
+   - swagger - good idea but you need to pollute it with aws specific
+     sections, which make sharing an arse.
+     #+BEGIN_SRC yaml
+x-amazon-apigateway-integration:
+  httpMethod: post
+  type: aws_proxy
+  uri:
+    Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${PreFlightFunction.Arn}/invocations
+     #+END_SRC
+     
+* When would you use it?
+Whenever you want to do something with lambdas, I reckon. 
+
+It's quick to get up and running and the development loop is really
+nice. It's probably not going to be so great once you get into large
+scale applications, but then I haven't tried that so maybe it'd be
+fine?
