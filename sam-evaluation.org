@@ -64,7 +64,7 @@ By default you get a hello world function.
 Time to get yammeling!
 
 Basically you define a function, and then either implicitly or
-explicitly defin the api gateway that goes with it. Functions are
+explicitly define the api gateway that goes with it. Functions are
 triggered by events, and you define those too, along with any
 ancilliary things your app will need, such as S3 buckets or DynamoDB
 table (or anything CloudFormation can provision).
